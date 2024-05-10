@@ -380,16 +380,19 @@ void kDTree::nearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &ta
         return;
 
     double currentDistance = calculateDistance(node->data, target);
+    // cout<<*node<<"\n";
 
     if (currentDistance < bestDistance)
     {
-        best = node;
+        best = node;        
         bestDistance = currentDistance;
+        // cout<<bestDistance<<"oo\n";
     }
 
     int currentDimension = depth % k;
     int targetValue = target[currentDimension];
     int nodeValue = node->data[currentDimension];
+    // cout<<targetValue<<" "<<nodeValue<<"\n";
 
     if (targetValue < nodeValue)
     {
@@ -415,27 +418,28 @@ void kDTree::kNearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &t
                                      std::vector<std::pair<double, kDTreeNode *>> &nearestList,
                                      double &maxDistance, int depth)
 {
+    // for (int i=0; i<nearestList.size(); i++) cout<<nearestList[i].first<<" "<<*nearestList[i].second<<"\n";    
+    
+    // cout<<nearestList.size()<<"\n";
     if (node == nullptr)
         return;
 
-    double currentDistance = calculateDistance(node->data, target);
-
-    if (currentDistance < maxDistance)
-    {
-        nearestList.push_back({currentDistance, node});
-        if (nearestList.size() > k)
-        {
+    double currentDistance = calculateDistance(node->data, target);        
+    if (node->left == nullptr && node->right == nullptr){
+        //cout<<*node<<" "<<"===\n";
+        if (currentDistance <= maxDistance || nearestList.size() < k){
+            nearestList.push_back({currentDistance, node});        
             int insertPos = nearestList.size() - 1;
             while (insertPos > 0 && nearestList[insertPos - 1].first > currentDistance)
             {
                 nearestList[insertPos] = nearestList[insertPos - 1];
                 insertPos--;
             }
-
             nearestList[insertPos] = {currentDistance, node};
-            nearestList.pop_back();
+            if (nearestList.size() > k) nearestList.pop_back();
             maxDistance = nearestList.back().first;
         }
+        return;
     }
 
     int currentDimension = depth % k;
@@ -445,12 +449,42 @@ void kDTree::kNearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &t
     if (targetValue < nodeValue)
     {
         kNearestNeighbourHelper(node->left, target, k, nearestList, maxDistance, depth + 1);
+        // cout<<maxDistance<<" ";
+        if (nearestList.size() > 0) maxDistance = nearestList.back().first;
+        // cout<<maxDistance<<"\n";
+        if (currentDistance <= maxDistance || nearestList.size() < k){
+            nearestList.push_back({currentDistance, node});        
+            int insertPos = nearestList.size() - 1;
+            while (insertPos > 0 && nearestList[insertPos - 1].first > currentDistance)
+            {
+                nearestList[insertPos] = nearestList[insertPos - 1];
+                insertPos--;
+            }
+            nearestList[insertPos] = {currentDistance, node};
+            if (nearestList.size() > k) nearestList.pop_back();
+            maxDistance = nearestList.back().first;
+        }
         if (nodeValue - targetValue <= maxDistance)
             kNearestNeighbourHelper(node->right, target, k, nearestList, maxDistance, depth + 1);
     }
     else
     {
         kNearestNeighbourHelper(node->right, target, k, nearestList, maxDistance, depth + 1);
+        // cout<<maxDistance<<" ";
+        if (nearestList.size() > 0) maxDistance = nearestList.back().first;
+        // cout<<maxDistance<<"\n";
+        if (currentDistance <= maxDistance || nearestList.size() < k){
+            nearestList.push_back({currentDistance, node});        
+            int insertPos = nearestList.size() - 1;
+            while (insertPos > 0 && nearestList[insertPos - 1].first > currentDistance)
+            {
+                nearestList[insertPos] = nearestList[insertPos - 1];
+                insertPos--;
+            }
+            nearestList[insertPos] = {currentDistance, node};
+            if (nearestList.size() > k) nearestList.pop_back();
+            maxDistance = nearestList.back().first;
+        }
         if (targetValue - nodeValue <= maxDistance)
             kNearestNeighbourHelper(node->left, target, k, nearestList, maxDistance, depth + 1);
     }
@@ -463,31 +497,15 @@ void kDTree::kNearestNeighbour(const std::vector<int> &target, int k, std::vecto
     double maxDistance = 999999;
 
     kNearestNeighbourHelper(root, target, k, nearestList, maxDistance, 0);
+    // for (int i=0; i<nearestList.size(); i++) cout<<nearestList[i].first<<" "<<*nearestList[i].second<<"\n";    
 
     bestList.reserve(k);
 
-    // Insertion sort
-    for (size_t i = 1; i < nearestList.size(); i++)
-    {
-        double keyDistance = nearestList[i].first;
-        kDTreeNode *keyNode = nearestList[i].second;
-        size_t j = i - 1;
-
-        while (j >= 0 && nearestList[j].first > keyDistance)
-        {
-            nearestList[j + 1].first = nearestList[j].first;
-            nearestList[j + 1].second = nearestList[j].second;
-            j--;
-        }
-
-        nearestList[j + 1].first = keyDistance;
-        nearestList[j + 1].second = keyNode;
-    }
-
     for (size_t i = 0; i < k && i < nearestList.size(); i++)
     {
-        bestList.push_back(nearestList[i].second);
-    }
+        kDTreeNode *tmp = new kDTreeNode(nearestList[i].second->data);                
+        bestList.push_back(tmp);
+    }    
 }
 
 kNN::kNN(int k)
@@ -594,8 +612,10 @@ double kNN::score(const Dataset &y_test, const Dataset &y_pred)
     }
     int numCorrect = 0;
     int nRows = labels_pred.size();
-    for (int i = 0; i < nRows; i++)
-        if (labels_pred[i] == labels_test[0])
+    for (int i = 0; i < nRows; i++){
+        if (labels_pred[i] == labels_test[i])
             numCorrect += 1;
+    }
+        
     return static_cast<double>(numCorrect) / nRows;
 }

@@ -91,8 +91,23 @@ void tc7()
     tree.insert({8, 7});
     tree.insert({9, 2});
     tree.insert({9, 5});
+    // tree.remove({9, 2});
+    // tree.remove({8, 2});
+    // tree.remove({9, 5});
+    // tree.remove({8, 7});
     vector<kDTreeNode *> bestList;
     tree.kNearestNeighbour({9, 3}, 5, bestList);
+    // tree.preorderTraversal();
+    // cout<<"\n";
+    // for (int i=0; i<1; i++){
+    //     kDTreeNode *best = nullptr;
+    //     tree.nearestNeighbour({9, 3}, best);
+    //     // tree.remove(best->data);
+    //     cout <<  *best << endl;
+    //     tree.remove(best->data);
+    // }
+    
+    
     cout << "5 Nearest neighbour of (9, 3) are: ";
     for (auto node : bestList)
     {
@@ -137,13 +152,19 @@ void tc9()
     train_test_split(feature, label, 0.2, X_train, X_test, y_train, y_test);
     knn.fit(X_train, y_train);
     Dataset y_pred = knn.predict(X_test);
+    std::cout << "y_pred" << endl;
+    y_pred.printHead(10, 10);
+    std::cout << endl;
+    std::cout << "y_test" << endl;
+    y_test.printHead(10, 10);
+    std::cout << endl;
     double accuracy = knn.score(y_test, y_pred);
     std::cout << "Accuracy: " << accuracy << endl;
 }
 
 int main(int argc, const char *argv[])
 {
-    tc7();
+    tc9();
 
     return 0;
 }
