@@ -8,6 +8,7 @@ struct kDTreeNode
     vector<int> data;
     kDTreeNode *left;
     kDTreeNode *right;
+    int label;
     kDTreeNode(vector<int> data, kDTreeNode *left = nullptr, kDTreeNode *right = nullptr)
     {
         this->data = data;
@@ -47,7 +48,7 @@ private:
     kDTreeNode *insertHelper(kDTreeNode *node, const std::vector<int> &point, int depth);
     kDTreeNode *removeHelper(kDTreeNode *node, const std::vector<int> &point, int depth);
     kDTreeNode *findMinNode(kDTreeNode *node, int dimension) const;
-    bool searchHelper(kDTreeNode *node, const std::vector<int> &point, int depth);
+    bool searchHelper(kDTreeNode *node, const std::vector<int> point, int depth);
     kDTreeNode *buildTreeHelper(std::vector<std::vector<int>> pointList, int depth);
     void bubbleSort(std::vector<std::vector<int>> &pointList, int dimension);
     void nearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &target, kDTreeNode *&best, double &bestDistance, int depth);
@@ -62,6 +63,9 @@ public:
 
     const kDTree &operator=(const kDTree &other);
     kDTree(const kDTree &other);
+    void setK(int vk){
+        k = vk;
+    }
 
     void inorderTraversal() const;
     void preorderTraversal() const;
@@ -85,6 +89,7 @@ private:
     Dataset X_train;
     Dataset y_train;
     kDTree tree;
+    kDTree treeLabels;
 
 public:
     kNN(int k = 5);

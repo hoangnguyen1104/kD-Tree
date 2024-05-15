@@ -262,7 +262,7 @@ void kDTree::remove(const std::vector<int> &point)
     root = removeHelper(root, point, 0);
 }
 
-bool kDTree::searchHelper(kDTreeNode *node, const std::vector<int> &point, int depth)
+bool kDTree::searchHelper(kDTreeNode *node, const std::vector<int> point, int depth)
 {
     if (node == nullptr)
     {
@@ -270,8 +270,14 @@ bool kDTree::searchHelper(kDTreeNode *node, const std::vector<int> &point, int d
     }
 
     int currentDimension = depth % k;
-
-    if (point == node->data)
+    int check = 1;
+    for (int i=0; i<point.size(); i++){
+        if (point[i] != node->data[i]) {
+            check = 0;
+            break;
+        }
+    }
+    if (check == 1)
     {
         return true;
     }
@@ -288,7 +294,9 @@ bool kDTree::searchHelper(kDTreeNode *node, const std::vector<int> &point, int d
 
 bool kDTree::search(const std::vector<int> &point)
 {
-    return searchHelper(root, point, 0);
+    vector<int> a;
+    for (int i=0; i<point.size(); i++) a.push_back(point[i]);
+    return searchHelper(root, a, 0);
 }
 
 void kDTree::bubbleSort(std::vector<std::vector<int>> &pointList, int dimension)
@@ -312,19 +320,9 @@ kDTreeNode *kDTree::buildTreeHelper(std::vector<std::vector<int>> pointList, int
     {
         return nullptr;
     }
-    if (pointList.size() == 1)
-    {
-        kDTreeNode *node = new kDTreeNode(pointList[0]);
-        return node;
-    }
 
     int currentDimension = depth % k;
     int n = pointList.size();
-    // for (int i=0; i<n; i++){
-    //     kDTreeNode *node2 = new kDTreeNode(pointList[i]);
-    //     cout << node2 << " ";
-    // }
-    // cout<<"\n";
     vector<vector<int>> point_left, point_right;
     for (int i = 0; i < n - 1; i++)
     {
@@ -337,14 +335,7 @@ kDTreeNode *kDTree::buildTreeHelper(std::vector<std::vector<int>> pointList, int
         }
     }
 
-    // for (int i=0; i<n; i++){
-    //     kDTreeNode *node2 = new kDTreeNode(pointList[i]);
-    //     cout<<*node2<<" ";
-    // }
-    // cout<<"\n";
-
     int mid = (n + 1) / 2 - 1;
-    // cout<<mid<<"\n";
     for (int i = 0; i < mid; i++)
         point_left.push_back(pointList[i]);
     for (int i = mid + 1; i < n; i++)
@@ -380,19 +371,16 @@ void kDTree::nearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &ta
         return;
 
     double currentDistance = calculateDistance(node->data, target);
-    // cout<<*node<<"\n";
 
     if (currentDistance < bestDistance)
     {
         best = node;        
         bestDistance = currentDistance;
-        // cout<<bestDistance<<"oo\n";
     }
 
     int currentDimension = depth % k;
     int targetValue = target[currentDimension];
     int nodeValue = node->data[currentDimension];
-    // cout<<targetValue<<" "<<nodeValue<<"\n";
 
     if (targetValue < nodeValue)
     {
@@ -418,15 +406,11 @@ void kDTree::kNearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &t
                                      std::vector<std::pair<double, kDTreeNode *>> &nearestList,
                                      double &maxDistance, int depth)
 {
-    // for (int i=0; i<nearestList.size(); i++) cout<<nearestList[i].first<<" "<<*nearestList[i].second<<"\n";    
-    
-    // cout<<nearestList.size()<<"\n";
     if (node == nullptr)
         return;
 
     double currentDistance = calculateDistance(node->data, target);        
     if (node->left == nullptr && node->right == nullptr){
-        //cout<<*node<<" "<<"===\n";
         if (currentDistance <= maxDistance || nearestList.size() < k){
             nearestList.push_back({currentDistance, node});        
             int insertPos = nearestList.size() - 1;
@@ -449,9 +433,7 @@ void kDTree::kNearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &t
     if (targetValue < nodeValue)
     {
         kNearestNeighbourHelper(node->left, target, k, nearestList, maxDistance, depth + 1);
-        // cout<<maxDistance<<" ";
         if (nearestList.size() > 0) maxDistance = nearestList.back().first;
-        // cout<<maxDistance<<"\n";
         if (currentDistance <= maxDistance || nearestList.size() < k){
             nearestList.push_back({currentDistance, node});        
             int insertPos = nearestList.size() - 1;
@@ -470,9 +452,7 @@ void kDTree::kNearestNeighbourHelper(kDTreeNode *node, const std::vector<int> &t
     else
     {
         kNearestNeighbourHelper(node->right, target, k, nearestList, maxDistance, depth + 1);
-        // cout<<maxDistance<<" ";
         if (nearestList.size() > 0) maxDistance = nearestList.back().first;
-        // cout<<maxDistance<<"\n";
         if (currentDistance <= maxDistance || nearestList.size() < k){
             nearestList.push_back({currentDistance, node});        
             int insertPos = nearestList.size() - 1;
@@ -496,8 +476,7 @@ void kDTree::kNearestNeighbour(const std::vector<int> &target, int k, std::vecto
 
     double maxDistance = 999999;
 
-    kNearestNeighbourHelper(root, target, k, nearestList, maxDistance, 0);
-    // for (int i=0; i<nearestList.size(); i++) cout<<nearestList[i].first<<" "<<*nearestList[i].second<<"\n";    
+    kNearestNeighbourHelper(root, target, k, nearestList, maxDistance, 0);   
 
     bestList.reserve(k);
 
@@ -519,7 +498,7 @@ void kNN::fit(Dataset &X_train, Dataset &y_train)
     this->y_train = y_train;
     list<list<int>> data_y = y_train.data;
     std::vector<int> labels;
-    std::vector<std::vector<int>> pointList;
+    std::vector<std::vector<int>> pointList, pointListLabels;
     for (const std::list<int> &innerList : data_y)
     {
         for (int element : innerList)
@@ -528,29 +507,35 @@ void kNN::fit(Dataset &X_train, Dataset &y_train)
         }
     }
     list<list<int>> data_x = X_train.data;
-    int row = 0;
+    int row = 0, sizeK;
     for (const std::list<int> &innerList : data_x)
     {
-        std::vector<int> features;
+        std::vector<int> features, features2;
         features.push_back(labels[row]);
         for (int element : innerList)
         {
             features.push_back(element);
+            features2.push_back(element);
         }
+        sizeK = features.size();
         pointList.push_back(features);
+        features2.push_back(labels[row]);
+        pointListLabels.push_back(features2);
         row += 1;
     }
-    tree.buildTree(pointList);
+    tree.setK(sizeK);
+    for (int i=0; i<pointList.size(); i++){
+        tree.insert(pointList[i]);
+        treeLabels.insert(pointListLabels[i]);
+    }
 }
 
 Dataset kNN::predict(Dataset &X_test)
 {
     Dataset y_pred;
     list<list<int>> data_x_test = X_test.data;
-    // int nRows = data_x_test.size();
-    // int nCols = 1;
-    // y_pred.getShape(nRows, nCols);
     list<list<int>> data;
+    int idx = 0;
     for (const std::list<int> &innerList : data_x_test)
     {
         std::vector<int> features;
@@ -563,10 +548,19 @@ Dataset kNN::predict(Dataset &X_test)
         std::vector<int> labels;
         for (kDTreeNode *node : bestList)
         {
-            labels.push_back(node->data[0]);
+            for (int label = 0; label <10; label++){
+                std::vector<int> pointList;
+                
+                pointList.push_back(label);
+                if (treeLabels.search(pointList)){
+                    labels.push_back(label);
+                    break;
+                }
+            }
         }
-        // for (int i=0; i<labels.size(); i++) std::cout<<labels[i]<<" ";
-        // std::cout<<std::endl;
+        for (int i=0; i<labels.size(); i++) std::cout<<labels[i]<<" ";
+        idx += 1;
+        std::cout<<" - "<<idx<<std::endl;
         int max_d = 0, d = -1, dem;
         for (int i = 0; i < labels.size(); i++)
         {
@@ -580,8 +574,6 @@ Dataset kNN::predict(Dataset &X_test)
                 d = labels[i];
             }
         }
-        // std::cout<<d;
-        // std::cout<<std::endl;
         list<int> cols;
         cols.push_back(d);
         data.push_back(cols);
